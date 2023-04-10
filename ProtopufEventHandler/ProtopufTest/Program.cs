@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using ProtoBuf;
+using ProtopufTest;
+using System.Reflection;
 
 namespace MyApp // Note: actual namespace depends on the project name.
 {
@@ -9,13 +11,26 @@ namespace MyApp // Note: actual namespace depends on the project name.
         static void Main(string[] args)
         {
             var myGame = new Game();
-            myGame.Invoke(new PlayerMoveEvent());
-            myGame.Invoke(new PlayerDeadEvent());
+
+            // serilization on client
+            var data1 = Magic.Serialize(new PlayerMoveEvent());
+            var data2 = Magic.Serialize(new PlayerDeadEvent());
+            // thing this byte array sended on the network
+
+            // deserializing on the server
+            var ev1 = Magic.Deserialize<MyArgs>(data1);   
+            var ev2 = Magic.Deserialize<MyArgs>(data2);
+            myGame.Invoke(ev1);
+            myGame.Invoke(ev2);
         }
 
     }
 
     #region EventHandler
+    [ProtoContract]
+    [ProtoInclude(1,typeof(PlayerMoveEvent))]
+    [ProtoInclude(2,typeof(PlayerDeadEvent))]
+
     public class MyArgs { }
     public class EventHandler
     {
@@ -36,7 +51,10 @@ namespace MyApp // Note: actual namespace depends on the project name.
     }
     #endregion
     #region GameEvents
+    [ProtoContract]
+
     public class PlayerMoveEvent : MyArgs { }
+    [ProtoContract]
 
     public class PlayerDeadEvent : MyArgs { }
     #endregion
